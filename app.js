@@ -8,13 +8,12 @@ const path = require('path');
 
 const promisify = require('util').promisify;
 const readdirPromise = promisify(fs.readdir);
-const readFilePromise = promisify(fs.readFile);
 const asyncUtil = require('async');
 const moment = require('moment');
 
-const displayOptions = ['gender', 'birthdate', 'name'];
 const recordsDirectory = path.join(__dirname, '/records');
 let records = [];
+let recordObjects = [];
 
 const usage = () => {
   const instructions = `
@@ -46,7 +45,6 @@ const errorLog = (error) => {
 }
 
 const prompt = (phrase) => {
-
   const interface = rl.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -59,7 +57,6 @@ const prompt = (phrase) => {
       resolve(answer);
     })
   })
-
 }
 
 const readFiles = (filesToRead) => {
@@ -138,7 +135,17 @@ const sortRecords = (recordObjects, selectedOption) => {
 }
 
 const displayRecords = (sortedRecords) => {
-	console.log('sortedRecords: ', sortedRecords)
+	sortedRecords.forEach(record => {
+		// Tabbed back for formatting purposes
+		const prettyRecord = `
+	First Name:     ${record.firstName}
+	Last Name:      ${record.lastName}
+	Gender:         ${record.gender}
+	Favorite Color: ${record.favoriteColor}
+	Date of Birth:  ${record.dob}
+	`
+		console.log(chalk.green(prettyRecord));
+	})
 }
 
 const sortByGender = (recordObjects) => {
@@ -158,12 +165,30 @@ const sortByName = (recordObjects) => {
 	return recordObjects.sort((a, b) => b.lastName > a.lastName);
 }
 
+const sortAndDisplayRecords = (selectedOption) => {
+	const sortedRecords = sortRecords(recordObjects, selectedOption);
+	displayRecords(sortedRecords);
+}
 
+
+// File runner
 (async () => {
 	const filesToRead = args.slice(2);
 	const filesFound = await readFiles(filesToRead);
 	const argsAreValid = await ensureArgsValidity(filesToRead, filesFound);
 	if (!argsAreValid) return;
+
+	await asyncUtil.each(filesToRead, async (file) => {
+		try {
+			await parseFile(file);
+		} catch (error) {
+			errorLog(error);
+			return;
+		}
+	}, async (error) => {
+	  if (error) errorLog(`an error occurred while reading the files: ${error}`);
+		recordObjects = mapRecordsToObjects(records);
+	});
 
 	let exitRequested = false;
 
@@ -171,38 +196,28 @@ const sortByName = (recordObjects) => {
 		const promptText = chalk.magenta('Please select an option or type help for a list of options:\n');
 		await prompt(promptText).then(async selectedOption => {
 
-			if (displayOptions.includes(selectedOption)) {
-
-				await asyncUtil.each(filesToRead, async (file) => {
-					try {
-						await parseFile(file);
-					} catch (error) {
-						errorLog(error);
-						return;
-					}
-				}, function(error) {
-				  if (error) errorLog(`an error occurred while reading the files: ${error}`);
-					const recordObjects = mapRecordsToObjects(records);
-					const sortedRecords = sortRecords(recordObjects, selectedOption);
-					displayRecords(sortedRecords);
-				});
-
-			} else {
-				switch(selectedOption) {
-					case 'help':
-						usage();
-						break;
-					case 'quit':
-						exitRequested = true;
-						console.log('Bye!')
-						break;
-				  default:
-				    errorLog(`\n\xa0\xa0invalid command passed: ${selectedOption}`);
-				    usage();
-				}
+			switch(selectedOption) {
+				case 'name':
+					sortAndDisplayRecords(selectedOption);
+					break;
+				case 'gender':
+					sortAndDisplayRecords(selectedOption);
+					break;
+				case 'birthdate':
+					sortAndDisplayRecords(selectedOption);
+					break;
+				case 'help':
+					usage();
+					break;
+				case 'quit':
+					exitRequested = true;
+					console.log('Bye!')
+					break;
+			  default:
+			    errorLog(`\n\xa0\xa0invalid command passed: ${selectedOption}`);
+			    usage();
 			}
+
 		})
 	}
-
 })()
-
