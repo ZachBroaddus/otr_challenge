@@ -10,6 +10,7 @@ const promisify = require('util').promisify;
 const readdirPromise = promisify(fs.readdir);
 const asyncUtil = require('async');
 const moment = require('moment');
+const cTable = require('console.table');
 
 const recordsDirectory = path.join(__dirname, '/records');
 let records = [];
@@ -115,7 +116,7 @@ const mapRecordsToObjects = (records) => {
 			lastName: r[0],
 			gender: r[2],
 			favoriteColor: r[3],
-			dob: r[4]
+			dob: moment(r[4], 'L').format('L')
 		}
 	})
 }
@@ -135,34 +136,25 @@ const sortRecords = (recordObjects, selectedOption) => {
 }
 
 const displayRecords = (sortedRecords) => {
-	sortedRecords.forEach(record => {
-		// Tabbed back for formatting purposes
-		const prettyRecord = `
-	First Name:     ${record.firstName}
-	Last Name:      ${record.lastName}
-	Gender:         ${record.gender}
-	Favorite Color: ${record.favoriteColor}
-	Date of Birth:  ${record.dob}
-	`
-		console.log(chalk.green(prettyRecord));
-	})
+	console.log('\n');
+	console.table(sortedRecords);
 }
 
 const sortByGender = (recordObjects) => {
 	return recordObjects.sort((a, b) => {          
     if (a.gender === b.gender) {
-      return a.lastName > b.lastName;
+      return (a.lastName > b.lastName) - (a.lastName < b.lastName);
     }
     return a.gender > b.gender ? 1 : -1;
 	});
 }
 
 const sortByBirthdate = (recordObjects) => {
-	return recordObjects.sort((a, b) => moment(a.dob, "MM-DD-YYYY") > moment(b.dob, "MM-DD-YYYY"));
+	return recordObjects.sort((a, b) => (new Date(a.dob) > new Date(b.dob)) - (new Date(a.dob) < new Date(b.dob)));
 }
 
 const sortByName = (recordObjects) => {
-	return recordObjects.sort((a, b) => b.lastName > a.lastName);
+	return recordObjects.sort((a, b) => (a.lastName < b.lastName) - (a.lastName > b.lastName));
 }
 
 const sortAndDisplayRecords = (selectedOption) => {
@@ -173,51 +165,60 @@ const sortAndDisplayRecords = (selectedOption) => {
 
 // File runner
 (async () => {
-	const filesToRead = args.slice(2);
-	const filesFound = await readFiles(filesToRead);
-	const argsAreValid = await ensureArgsValidity(filesToRead, filesFound);
-	if (!argsAreValid) return;
+	if (args.length >= 3 && !args.includes('spec')) {
+		const filesToRead = args.slice(2);
+		const filesFound = await readFiles(filesToRead);
+		const argsAreValid = await ensureArgsValidity(filesToRead, filesFound);
+		if (!argsAreValid) return;
 
-	await asyncUtil.each(filesToRead, async (file) => {
-		try {
-			await parseFile(file);
-		} catch (error) {
-			errorLog(error);
-			return;
-		}
-	}, async (error) => {
-	  if (error) errorLog(`an error occurred while reading the files: ${error}`);
-		recordObjects = mapRecordsToObjects(records);
-	});
-
-	let exitRequested = false;
-
-	while(!exitRequested) {
-		const promptText = chalk.magenta('Please select an option or type help for a list of options:\n');
-		await prompt(promptText).then(async selectedOption => {
-
-			switch(selectedOption) {
-				case 'name':
-					sortAndDisplayRecords(selectedOption);
-					break;
-				case 'gender':
-					sortAndDisplayRecords(selectedOption);
-					break;
-				case 'birthdate':
-					sortAndDisplayRecords(selectedOption);
-					break;
-				case 'help':
-					usage();
-					break;
-				case 'quit':
-					exitRequested = true;
-					console.log('Bye!')
-					break;
-			  default:
-			    errorLog(`\n\xa0\xa0invalid command passed: ${selectedOption}`);
-			    usage();
+		await asyncUtil.each(filesToRead, async (file) => {
+			try {
+				await parseFile(file);
+			} catch (error) {
+				errorLog(error);
+				return;
 			}
+		}, async (error) => {
+		  if (error) errorLog(`an error occurred while reading the files: ${error}`);
+			recordObjects = mapRecordsToObjects(records);
+		});
 
-		})
+		let exitRequested = false;
+
+		while(!exitRequested) {
+			const promptText = chalk.magenta('Please select an option or type help for a list of options:\n');
+			await prompt(promptText).then(async selectedOption => {
+
+				switch(selectedOption) {
+					case 'name':
+						sortAndDisplayRecords(selectedOption);
+						break;
+					case 'gender':
+						sortAndDisplayRecords(selectedOption);
+						break;
+					case 'birthdate':
+						sortAndDisplayRecords(selectedOption);
+						break;
+					case 'help':
+						usage();
+						break;
+					case 'quit':
+						exitRequested = true;
+						console.log('Bye!')
+						break;
+				  default:
+				    errorLog(`\n\xa0\xa0invalid command passed: ${selectedOption}`);
+				    usage();
+				}
+
+			})
+		}
 	}
 })()
+
+module.exports = {
+	mapRecordsToObjects: mapRecordsToObjects,
+	sortByGender: sortByGender,
+	sortByBirthdate: sortByBirthdate,
+	sortByName: sortByName
+};
