@@ -40,14 +40,6 @@ router.get('/records/name', async (ctx, next) => {
   ctx.body = { records: sortedRecords };
 });
 
-
-// // POST /records sample data
-// [
-// 	["Gribble,Bernardo,Male,Goldenrod,4/16/2018"],
-// 	["Asbury|Marijn|Male|Red|10/5/2018"],
-// 	["Brixey Gloriane Female Indigo 2/12/2019"]
-// ]
-
 router.post('/records', (ctx, next) => {
 	const records = ctx.request.body.records;
 	const parsedRecords = JSON.parse(records).data;
@@ -57,7 +49,7 @@ router.post('/records', (ctx, next) => {
 		postedRecords.push(record);
 	})
 
-	ctx.body = `Request Body: ${JSON.stringify(ctx.request.body)}`;
+	ctx.body = { message: "Record(s) successfully added!", records: parsedRecords };
 });
 
 // Helper Functions
@@ -92,4 +84,6 @@ app
 	.use(router.routes())
 	.use(router.allowedMethods());
 
-app.listen(3000);
+const appServer = app.listen(3000);
+
+module.exports =  { appServer: appServer };
