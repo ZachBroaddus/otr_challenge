@@ -220,5 +220,8 @@ module.exports = {
 	mapRecordsToObjects: mapRecordsToObjects,
 	sortByGender: sortByGender,
 	sortByBirthdate: sortByBirthdate,
-	sortByName: sortByName
+	sortByName: sortByName,
+	parseFile: parseFile,
+	errorLog: errorLog,
+	records: records
 };
