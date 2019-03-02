@@ -63,21 +63,18 @@ describe('Server', function () {
 
 		it('it should POST a record or array of records', (done) => {
 
-			const recordsToPost = { 
-				"records": JSON.stringify(
-					{ 
-						"data": [
-							["Gribble,Bernardo,Male,Goldenrod,4/16/2018"],
-							["Asbury|Marijn|Male|Red|10/5/2018"],
-							["Brixey Gloriane Female Indigo 2/12/2019"]
-						]
-					}
-				)
+			const recordsToPost = { "records": 
+				[
+					["Gribble,Bernardo,Male,Goldenrod,4/16/2018"],
+					["Asbury|Marijn|Male|Red|10/5/2018"],
+					["Brixey Gloriane Female Indigo 2/12/2019"]
+				]
 			}
 
 	    chai.request(server)
 	      .post('/records')
-	      .send(recordsToPost)
+	      .set('content-type', 'text/plain')
+	      .send(JSON.stringify(recordsToPost))
 	      .end((err, res) => {
 	        res.should.have.status(200);
 	        res.body.should.be.an('object');

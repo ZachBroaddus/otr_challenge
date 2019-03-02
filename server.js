@@ -41,8 +41,7 @@ router.get('/records/name', async (ctx, next) => {
 });
 
 router.post('/records', (ctx, next) => {
-	const records = ctx.request.body.records;
-	const parsedRecords = JSON.parse(records).data;
+	const parsedRecords = JSON.parse(ctx.request.body).records
 
 	parsedRecords.forEach((record) => {
 		record = record.join().split(/[ ,|]+/);
