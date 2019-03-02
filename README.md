@@ -3,8 +3,10 @@ Code challenge for OTR Transportation
 
 -------------------------------------
 To run the cli app, use `node app.js <filenames>`
+Any files located in the `records` directory can be selected.<br/>
+You may add files or records to the existing files, provided they are in the same format as the existing `.csv` files.
 
-To run the server, use `node server.js`
+To run the server, use `node server.js`<br/>
 The server runs on `localhost:3000`
 
 To run the test suite, use `npm test`
