@@ -15,14 +15,10 @@ To run the test suite, use `npm test`
 Data posted to the `/records` route should be in the following format:
 ```
 { 
-  "records": JSON.stringify(
-    { 
-      "data": [
-        ["Gribble,Bernardo,Male,Goldenrod,4/16/2018"],
-        ["Asbury|Marijn|Male|Red|10/5/2018"],
-        ["Brixey Gloriane Female Indigo 2/12/2019"]
-      ]
-    }
-  )
+  "records": [
+    ["Gribble,Bernardo,Male,Goldenrod,4/16/2018"],
+    ["Asbury|Marijn|Male|Red|10/5/2018"],
+    ["Brixey Gloriane Female Indigo 2/12/2019"]
+  ]
 }
 ```
